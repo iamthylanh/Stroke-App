@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SelfHealth - Dự đoán nguy cơ đột quỵ</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --primary-color: #2a628f; /* Màu xanh chủ đạo */
+        --secondary-color: #6a9ac4; /* Màu xanh phụ */
+        --accent-color: #f7b731; /* Màu vàng cam làm điểm nhấn */
+        --light-bg: #f5f8fa;
+        --dark-bg: #1d3b75;
+        --text-dark: #333;
+        --text-light: #f8f9fa;
+        --success-color: #28a745;
+        --warning-color: #ffc107;
+        --danger-color: #dc3545;
+      }
+
+      body {
+        font-family: "Roboto", sans-serif;
+        background-color: var(--light-bg);
+        color: var(--text-dark);
+        line-height: 1.6;
+      }
+
+      /* Top Bar */
+      .top-bar {
+        background-color: var(--dark-bg);
+        color: var(--text-light);
+        padding: 8px 0;
+        font-size: 0.85rem;
+      }
+
+      /* Navbar */
+      .navbar-brand {
+        font-weight: 700;
+        color: var(--primary-color) !important;
+        font-size: 1.8rem;
+      }
+      .navbar-brand img {
+        width: 230px;
+        height: 50px;
+        object-fit: contain; /* Đảm bảo logo không bị bóp méo */
+      }
+
+      .nav-link {
+        font-weight: 500;
+        color: var(--text-dark) !important;
+        transition: color 0.3s ease;
+      }
+      .nav-link:hover {
+        color: var(--primary-color) !important;
+      }
+
+      .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        transition: all 0.3s ease;
+      }
+      .btn-primary:hover {
+        background-color: #1a4a6e; /* Màu đậm hơn khi hover */
+        border-color: #1a4a6e;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Hero Section */
+      .hero-section {
+        background: linear-gradient(to bottom, #dbeafe, var(--light-bg));
+        padding: 80px 0 60px; /* Thêm padding trên và dưới */
+        border-bottom-left-radius: 50px; /* Bo tròn góc dưới trái */
+        border-bottom-right-radius: 50px; /* Bo tròn góc dưới phải */
+        margin-bottom: 40px;
+      }
+
+      .hero-section h1 {
+        font-size: 3.5rem; /* Make it larger */
+        font-weight: 700;
+        color: var(--dark-bg); /* Unified dark blue color */
+        text-transform: uppercase; /* Make it uppercase */
+      }
+
+      .hero-section p {
+        font-size: 1.1rem;
+        color: #555;
+      }
+
+      .hero-image {
+        max-width: 90%;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      }
+
+      /* Search Form (Main Content Area) */
+      .search-form {
+        background: linear-gradient(135deg, #fffce6 70%, #cc99ff 100%);
+        border-radius: 15px;
+        padding: 40px; /* Tăng padding */
+        margin-top: -80px; /* Kéo lên hero section */
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1); /* Đổ bóng mạnh hơn */
+      }
+
+      .search-form h4 {
+        color: var(--primary-color);
+        font-weight: 700;
+        margin-bottom: 25px;
+      }
+
+      .search-form .form-group {
+        margin-bottom: 1.25rem; /* Khoảng cách giữa các nhóm form */
+      }
+
+      .search-form .form-label {
+        display: block;
+        text-align: left; /* Căn trái label */
+        font-weight: 500;
+        margin-bottom: 8px; /* Khoảng cách giữa label và input */
+        color: #444;
+      }
+
+      .search-form .form-control,
+      .search-form .form-select {
+        width: 100%; /* Chiều rộng full trong cột */
+        max-width: 200px; /* Giới hạn chiều rộng tối đa, giữ nguyên để không phá layout */
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        border: 1px solid #ced4da;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .search-form .form-control:focus,
+      .search-form .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(42, 98, 143, 0.25); /* Hiệu ứng focus */
+        outline: none;
+      }
+
+      /* Tooltip tùy chỉnh */
+      .form-label .bi-info-circle {
+        font-size: 0.9rem;
+        color: var(--secondary-color);
+        margin-left: 5px;
+        cursor: pointer;
+      }
+
+      /* Nút Chẩn đoán */
+      .search-form .btn-lg {
+        padding: 15px 40px; /* Tăng padding */
+        font-size: 1.3rem; /* Tăng kích thước chữ */
+        border-radius: 30px;
+        margin-top: 20px;
+      }
+
+      /* Icon Boxes Section */
+      .icon-box {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        text-align: center;
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        border-bottom: 5px solid transparent; /* Viền dưới ban đầu */
+      }
+
+      .icon-box:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        border-bottom-color: var(--primary-color); /* Viền dưới khi hover */
+      }
+
+      .icon-box h5 {
+        margin-bottom: 15px;
+        color: var(--primary-color);
+        font-weight: 600;
+      }
+
+      .icon-box .bi {
+        font-size: 3.5rem; /* Kích thước icon lớn hơn */
+        color: var(--primary-color);
+        margin-bottom: 20px;
+      }
+
+      .section-title h2 {
+        color: var(--primary-color);
+        font-weight: 700;
+        font-size: 2.2rem;
+        margin-bottom: 40px;
+      }
+
+      /* Result Box */
+      .result-box {
+        background: white;
+        border-radius: 15px;
+        padding: 30px; /* Tăng padding */
+        margin-top: 0; /* Đã được bố trí lại */
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        border-left: 6px solid; /* Defined by specific risk classes */
+        text-align: center;
+      }
+
+      .risk-low {
+        border-left-color: var(--success-color) !important;
+        background: linear-gradient(
+          135deg,
+          #e6ffe6 0%,
+          #ffffff 100%
+        ); /* Màu nền nhạt hơn */
+      }
+
+      .risk-medium {
+        border-left-color: var(--warning-color) !important;
+        background: linear-gradient(135deg, #fffce6 0%, #ffffff 100%);
+      }
+
+      .risk-high {
+        border-left-color: var(--danger-color) !important;
+        background: linear-gradient(135deg, #ffe6e6 0%, #ffffff 100%);
+      }
+
+      /* Progress Circle with spherical effect */
+      .progress-circle {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 25px;
+        font-size: 3rem;
+        font-weight: 700;
+        color: white;
+        box-shadow: inset 0 0 50px rgba(255, 255, 255, 0.5),
+          /* Inner light glow */ inset 0 0 30px rgba(0, 0, 0, 0.3),
+          /* Inner shadow */ 0 0 20px rgba(0, 0, 0, 0.25),
+          /* Outer shadow */ 0 10px 20px rgba(0, 0, 0, 0.2); /* Deeper shadow for lift */
+        transition: background-color 0.5s ease-in-out,
+          box-shadow 0.5s ease-in-out; /* Smooth transition for color and shadow */
+        position: relative; /* Needed for pseudo-elements */
+        overflow: hidden; /* Ensures inner pseudo-elements are clipped */
+      }
+
+      /* Pseudo-element for top-left highlight (simulating light source) */
+      .progress-circle::before {
+        content: "";
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        width: 80%;
+        height: 80%;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle at 30% 30%,
+          rgba(255, 255, 255, 0.8) 0%,
+          rgba(255, 255, 255, 0) 60%
+        );
+        opacity: 0.7;
+        filter: blur(5px);
+        pointer-events: none; /* Allows clicks to pass through */
+      }
+
+      /* Pseudo-element for bottom-right shadow (simulating depth) */
+      .progress-circle::after {
+        content: "";
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        width: 70%;
+        height: 70%;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle at 70% 70%,
+          rgba(0, 0, 0, 0.3) 0%,
+          rgba(0, 0, 0, 0) 60%
+        );
+        opacity: 0.6;
+        filter: blur(5px);
+        pointer-events: none;
+      }
+
+      .result-box h5 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 10px;
+      }
+
+      .result-box p {
+        font-size: 1rem;
+        color: #666;
+      }
+
+      /* Advice Section */
+      .advice-section {
+        background: #f8f9fa;
+        border-radius: 12px; /* Bo tròn hơn */
+        padding: 25px; /* Tăng padding */
+        margin-top: 30px; /* Khoảng cách lớn hơn */
+        border: 1px solid #e0e6ea;
+        max-height: 250px; /* Chiều cao tối đa */
+        overflow-y: auto; /* Tạo thanh cuộn dọc */
+        text-align: left; /* Căn trái nội dung lời khuyên */
+        font-size: 1.05rem; /* Cỡ chữ lời khuyên to lên */
+        line-height: 1.5; /* Giảm khoảng cách dòng */
+      }
+
+      .advice-section h5 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+      }
+
+      .advice-section p {
+        margin-bottom: 5px; /* Giảm khoảng cách giữa các đoạn */
+      }
+
+      /* CSS cho các tiêu đề nhỏ trong lời khuyên */
+      .advice-section strong {
+        display: block; /* Đảm bảo mỗi tiêu đề trên một dòng mới */
+        margin-top: 10px; /* Giảm khoảng cách trên tiêu đề */
+        font-size: 1.2rem; /* Cỡ chữ tiêu đề to hơn */
+        color: var(--primary-color);
+        font-weight: 700;
+      }
+      .advice-section strong:first-child {
+        margin-top: 0; /* Tiêu đề đầu tiên không cần margin-top */
+      }
+
+      /* Loading Spinner */
+      .loading-spinner {
+        display: none;
+        text-align: center;
+        padding: 40px;
+        color: var(--primary-color);
+      }
+
+      /* Hiệu ứng Fade In & Slide Up */
+      .hidden {
+        display: none;
+      }
+
+      .fade-in-slide-up {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+      }
+
+      .fade-in-slide-up.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* Chatbot */
+      #chatbot {
+        border-radius: 15px; /* Bo tròn hơn */
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        margin-top: 30px; /* Khoảng cách cho chatbot */
+      }
+
+      #chatbot .bg-primary {
+        background-color: var(--primary-color) !important;
+        font-weight: 500;
+        padding: 12px 20px;
+      }
+
+      #chatMessages {
+        max-height: 550px; /* Tăng chiều cao chatbox */
+        height: 300px; /* Allow content to dictate height up to max-height */
+        overflow-y: auto;
+        padding: 20px;
+        background-color: #eef3f7;
+        border-bottom: 1px solid #dee2e6;
+      }
+
+      #chatMessages div {
+        padding: 10px 15px;
+        border-radius: 10px;
+        margin-bottom: 12px; /* Khoảng cách giữa các tin nhắn */
+        max-width: 80%; /* Giới hạn độ rộng tin nhắn */
+        word-wrap: break-word; /* Đảm bảo ngắt dòng cho tin nhắn dài */
+      }
+
+      #chatMessages .text-end {
+        background-color: var(--secondary-color);
+        color: white;
+        margin-left: auto;
+        border-bottom-right-radius: 4px; /* Bo tròn góc dưới phải ít hơn */
+      }
+
+      #chatMessages .text-start {
+        background-color: #ffffff;
+        color: var(--text-dark);
+        margin-right: auto;
+        border: 1px solid #e0e0e0;
+        border-bottom-left-radius: 4px; /* Bo tròn góc dưới trái ít hơn */
+      }
+
+      /* Điều chỉnh cho input và nút gửi của chatbot */
+      .chat-input-group {
+        width: 100%;
+        gap: 0.5rem;
+        display: flex; /* Dùng flexbox để căn chỉnh */
+        border-top: 1px solid #000; /* Thêm đường viền trên để phân biệt */
+        height: auto;
+      }
+
+      #chatInput {
+        flex-grow: 1; /* Cho input chiếm hết không gian còn lại */
+        border: none; /* Bỏ border mặc định */
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0.75rem 1rem;
+        width: 100% !important; /* ép rộng */
+        min-width: 0; /* giúp tránh vượt khung */
+      }
+
+      #chatInput:focus {
+        box-shadow: none;
+      }
+
+      #chatbot .btn {
+        border-radius: 0;
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        padding: 0.75rem 1.25rem;
+        flex-shrink: 0; /* Ngăn nút co lại */
+      }
+
+      .big-heart {
+        font-size: 2.5rem; /* Kích thước lớn hơn */
+        color: var(--danger-color); /* Màu đỏ đậm hơn */
+        vertical-align: middle;
+        margin-right: 10px;
+      }
+
+      /* Footer */
+      footer {
+        background-color: var(--dark-bg); /* Màu nền tối hơn */
+        color: var(--text-light); /* Chữ trắng */
+        padding: 50px 0;
+      }
+
+      footer h5 {
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: var(--accent-color); /* Màu nhấn cho tiêu đề footer */
+      }
+
+      footer p,
+      footer li,
+      footer a {
+        color: var(--text-light);
+        font-size: 0.95rem;
+      }
+
+      footer a {
+        text-decoration: none;
+        transition: color 0.3s ease;
+      }
+
+      footer a:hover {
+        color: var(--secondary-color); /* Màu xanh nhạt hơn khi hover */
+      }
+
+      footer .list-unstyled li {
+        margin-bottom: 8px;
+      }
+
+      footer .bi {
+        color: var(--text-light);
+        transition: color 0.3s ease;
+      }
+
+      footer .bi:hover {
+        color: var(--accent-color); /* Màu nhấn khi hover icon */
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="top-bar">
+      <div class="container d-flex justify-content-between">
+        <div>Digital Transformation Challenge</div>
+        <div>Liên hệ: hlls@gmail.com</div>
+      </div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg bg-white shadow-sm">
+      <div class="container">
+        <div class="navbar-brand">
+          <img src="logo.png" alt="SelfHealth Logo" />
+        </div>
+        <button
+          class="navbar-toggler"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto align-items-lg-center">
+            <li class="nav-item"><a class="nav-link" href="#">Trang chủ</a></li>
+            <li class="nav-item"><a class="nav-link" href="#">Thông tin</a></li>
+            <li class="nav-item"><a class="nav-link" href="#">Dịch vụ</a></li>
+            <li class="nav-item"><a class="nav-link" href="#">Cá nhân</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <section class="hero-section">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-lg-6">
+            <h1 class="mb-3 text-center">
+              Chẩn đoán bệnh đột quỵ bằng học máy
+            </h1>
+            <p class="mb-4">
+              Sức khỏe là vốn quý nhất mà bạn sở hữu. Dù công việc bận rộn đến
+              đâu, đừng quên lắng nghe cơ thể mình, ăn uống lành mạnh, nghỉ ngơi
+              điều độ và khám sức khỏe định kỳ.
+            </p>
+            <a href="#" class="btn btn-primary">Tìm hiểu thêm</a>
+          </div>
+          <div class="col-lg-6 text-center">
+            <img
+              src="https://ibaoviet.vn/wp-content/uploads/2018/08/bao-hiem-kham-suc-khoe-dinh-ky.jpg"
+              alt="Doctor checking patient"
+              class="hero-image"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="main-content-section pb-5">
+      <div class="container">
+        <div class="search-form">
+          <h4 class="mb-4 text-center">
+            <i class="bi bi-heart-pulse big-heart"></i> <b> NHẬP THÔNG TIN </b>
+          </h4>
+          <p class="mt-3 text-center text-muted">
+            <i
+              ><b>Hướng dẫn:</b> Hãy chọn 0 khi bạn không có triệu chứng và hãy
+              chọn 1 khi bạn có triệu chứng.</i
+            >
+          </p>
+
+          <div class="row">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+              <form id="diagnosisForm" class="row g-3">
+                <div class="col-md-6 form-group">
+                  <label class="form-label"
+                    >Đau ngực
+                    <i
+                      class="bi bi-info-circle"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      title="Cảm giác khó chịu hoặc nặng ở vùng ngực, có thể lan ra cánh tay, vai, hàm."
+                    ></i>
+                  </label>
+                  <select id="chest_pain" class="form-select">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6 form-group">
+                  <label class="form-label"
+                    >Khó thở
+                    <i
+                      class="bi bi-info-circle"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      title="Cảm giác hụt hơi, khó thở ngay cả khi nghỉ ngơi hoặc khi gắng sức nhẹ."
+                    ></i>
+                  </label>
+                  <select id="shortness_of_breath" class="form-select">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6 form-group">
+                  <label class="form-label"
+                    >Rối loạn nhịp tim
+                    <i
+                      class="bi bi-info-circle"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      title="Cảm giác tim đập nhanh, mạnh, bỏ nhịp hoặc đập không đều."
+                    ></i>
+                  </label>
+                  <select id="irregular_heartbeat" class="form-select">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6 form-group">
+                  <label class="form-label"
+                    >Mệt mỏi, suy nhược
+                    <i
+                      class="bi bi-info-circle"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      title="Mệt mỏi kéo dài, không giảm dù đã nghỉ ngơi đầy đủ, suy nhược cơ thể."
+                    ></i>
+                  </label>
+                  <select id="fatigue_weakness" class="form-select">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6 form-group">
+                  <label class="form-label"
+                    >Chóng mặt
+                    <i
+                      class="bi bi-info-circle"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      title="Cảm giác mất thăng bằng, quay cuồng, hoặc sắp ngất."
+                    ></i>
+                  </label>
+                  <select id="dizziness" class="form-select">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6 form-group">
+                  <label class="form-label"
+                    >Sưng, phù
+                    <i
+                      class="bi bi-info-circle"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      title="Sưng phù ở chân, mắt cá chân, bàn chân hoặc bụng do tích nước."
+                    ></i>
+                  </label>
+                  <select id="swelling" class="form-select">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6 form-group">
+                  <label class="form-label"
+                    >Đau vùng cổ/hàm/vai/lưng
+                    <i
+                      class="bi bi-info-circle"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      title="Cơn đau có thể lan từ ngực ra các vùng này, đặc biệt là đau hàm bên trái."
+                    ></i>
+                  </label>
+                  <select id="pain_in_neck" class="form-select">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6 form-group">
+                  <label class="form-label"
+                    >Đổ mồ hôi nhiều bất thường
+                    <i
+                      class="bi bi-info-circle"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      title="Đổ mồ hôi lạnh, bất thường mà không do vận động hay nhiệt độ môi trường."
+                    ></i>
+                  </label>
+                  <select id="excessive_sweating" class="form-select">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6 form-group">
+                  <label class="form-label"
+                    >Ho kéo dài
+                    <i
+                      class="bi bi-info-circle"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      title="Ho dai dẳng, có thể kèm theo đờm hồng hoặc có máu."
+                    ></i>
+                  </label>
+                  <select id="persistent_cough" class="form-select">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6 form-group">
+                  <label class="form-label"
+                    >Buồn nôn/Nôn
+                    <i
+                      class="bi bi-info-circle"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      title="Cảm giác buồn nôn hoặc nôn không rõ nguyên nhân, đặc biệt khi kèm các triệu chứng khác."
+                    ></i>
+                  </label>
+                  <select id="nausea" class="form-select">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6 form-group">
+                  <label class="form-label"
+                    >Tăng huyết áp
+                    <i
+                      class="bi bi-info-circle"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      title="Tiền sử chẩn đoán cao huyết áp hoặc chỉ số huyết áp thường xuyên cao."
+                    ></i>
+                  </label>
+                  <select id="high_blood_pressure" class="form-select">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6 form-group">
+                  <label class="form-label"
+                    >Khó chịu ở ngực khi gắng sức
+                    <i
+                      class="bi bi-info-circle"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      title="Cảm giác đau, nặng hoặc khó chịu ở ngực xuất hiện khi vận động mạnh và giảm khi nghỉ ngơi."
+                    ></i>
+                  </label>
+                  <select id="chest_discomfort" class="form-select">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6 form-group">
+                  <label class="form-label"
+                    >Tay chân lạnh
+                    <i
+                      class="bi bi-info-circle"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      title="Cảm giác lạnh bất thường ở bàn tay và bàn chân, có thể kèm theo tê bì."
+                    ></i>
+                  </label>
+                  <select id="cold_hand" class="form-select">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6 form-group">
+                  <label class="form-label"
+                    >Ngáy/Ngưng thở khi ngủ
+                    <i
+                      class="bi bi-info-circle"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      title="Thói quen ngáy to, hoặc có những khoảng ngừng thở ngắn trong khi ngủ."
+                    ></i>
+                  </label>
+                  <select id="snoring" class="form-select">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6 form-group">
+                  <label class="form-label"
+                    >Lo âu/Cảm giác sợ hãi như sắp chết
+                    <i
+                      class="bi bi-info-circle"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      title="Cảm giác hoảng loạn, lo lắng tột độ không rõ nguyên nhân."
+                    ></i>
+                  </label>
+                  <select id="anxiety" class="form-select">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6 form-group">
+                  <label class="form-label">Tuổi</label>
+                  <input
+                    type="number"
+                    id="age"
+                    class="form-control"
+                    min="1"
+                    max="120"
+                    required
+                  />
+                </div>
+
+                <div class="col-12 text-center mt-4">
+                  <button
+                    type="submit"
+                    class="btn btn-primary btn-lg px-3 py-2 fw-bold shadow-sm rounded-pill"
+                  >
+                    🔍 Chẩn đoán
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div class="col-lg-6">
+              <div id="loadingSpinner" class="loading-spinner">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Đang tải...</span>
+                </div>
+                <p class="mt-3">Đang phân tích và tạo lời khuyên từ AI...</p>
+              </div>
+
+              <div id="resultContainer" class="hidden fade-in-slide-up">
+                <div id="resultBox" class="result-box">
+                  <div class="row">
+                    <div class="col-12 text-center">
+                      <div id="progressCircle" class="progress-circle">
+                        <span id="riskPercentage">0%</span>
+                      </div>
+                      <h5 id="riskLevel">Mức độ nguy cơ</h5>
+                      <p id="riskDescription" class="mt-3">
+                        Mô tả chi tiết về mức độ nguy cơ
+                      </p>
+                    </div>
+                    <div class="col-12">
+                      <div class="advice-section">
+                        <h5>
+                          <i class="bi bi-robot me-2"></i> Khuyến nghị dành cho
+                          bạn
+                        </h5>
+                        <div id="aiAdvice">Đang tải lời khuyên...</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="chatbox" class="mt-4">
+                  <div
+                    class="bg-primary text-white px-3 py-3 rounded-top d-flex align-items-center"
+                  >
+                    <i class="bi bi-chat-dots me-2"></i> Trao đổi thêm với
+                    Gemini AI
+                  </div>
+                  <div id="chatMessages" class="border border-top-0 p-3"></div>
+                  <div class="chat-input-group align-items-stretch">
+                    <input
+                      id="chatInput"
+                      type="text"
+                      class="form-control"
+                      placeholder="Hỏi thêm..."
+                      style="flex-grow: 1; min-width: 0"
+                    />
+                    <button
+                      onclick="sendChat()"
+                      class="btn btn-primary d-flex align-items-center px-4"
+                    >
+                      <i
+                        class="bi bi-send me-1 py-1"
+                        style="margin-top: 10px"
+                      ></i>
+                      Gửi
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="py-5">
+      <div class="container">
+        <div class="section-title text-center mb-5">
+          <h2>
+            <i><b>Dành cho bạn</b></i>
+          </h2>
+        </div>
+        <div class="row g-4">
+          <div class="col-md-4">
+            <div class="icon-box">
+              <i class="bi bi-info-circle fs-1 text-primary mb-3"></i>
+              <h5><b>Thông tin</b></h5>
+              <p>
+                Chỉ một giây chần chừ có thể đổi cả cuộc đời, hãy chủ động phòng
+                ngừa đột quỵ từ hôm nay.
+              </p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="icon-box">
+              <i class="bi bi-heart-pulse fs-1 text-primary mb-3"></i>
+              <h5><b>Dịch vụ</b></h5>
+              <p>
+                SelfHealth mang đến những dịch vụ giúp bạn theo dõi và kiểm tra
+                sức khỏe mỗi ngày.
+              </p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="icon-box">
+              <i class="bi bi-robot fs-1 text-primary mb-3"></i>
+              <h5><b>AI hỗ trợ</b></h5>
+              <p>
+                Trao đổi với Gemini AI để giải đáp các thắc mắc về sức khỏe và
+                phòng ngừa đột quỵ.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="mt-5">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <h5 class="fw-bold">SelfHealth</h5>
+            <p style="text-align: justify">
+              Hãy chủ động phòng đột quỵ để sống trọn từng khoảnh khắc. Cùng
+              SelfHealth theo dõi và cải thiện sức khỏe mỗi ngày.
+            </p>
+          </div>
+
+          <div class="col-md-4 mb-3">
+            <h5 class="fw-bold">Thành viên nhóm</h5>
+            <ul class="list-unstyled">
+              <li>
+                <a href="#" class="text-decoration-none">Trịnh Thị Mỹ Linh</a>
+              </li>
+              <li>
+                <a href="#" class="text-decoration-none"
+                  >Nguyễn Thị Thúy Lành</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-decoration-none">Nguyễn Chí Hải</a>
+              </li>
+              <li>
+                <a href="#" class="text-decoration-none">Hồ Quốc Sử</a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="col-md-4 mb-3">
+            <h5 class="fw-bold">Liên hệ</h5>
+            <p>
+              Email:
+              <a href="mailto:hlls@gmail.com" class="text-decoration-none"
+                >hlls@gmail.com</a
+              >
+            </p>
+            <p>Liên hệ: 0123 456 789</p>
+            <div class="d-flex gap-3 mt-2">
+              <a href="#" class="text-white"
+                ><i class="bi bi-facebook fs-4"></i
+              ></a>
+              <a href="#" class="text-white"
+                ><i class="bi bi-instagram fs-4"></i
+              ></a>
+              <a href="#" class="text-white"
+                ><i class="bi bi-twitter fs-4"></i
+              ></a>
+            </div>
+          </div>
+        </div>
+
+        <hr class="border-light" />
+        <p class="text-center mb-0">
+          © 2025 SelfHealth. Digital Transformation Challenge.
+        </p>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      // Biến toàn cục
+      let currentApiKey = ""; // API Key cho Gemini AI
+      let currentRiskData = null; // Dữ liệu nguy cơ hiện tại để dùng cho chat AI
+      const SVM_API_URL = "http://127.0.0.1:5000/predict_stroke_risk"; // URL của API backend SVM
+
+      // Hàm xác định mức độ nguy cơ (dùng cho cả SVM và demo)
+      function getRiskLevel(percentage) {
+        if (percentage < 25) return "low";
+        if (percentage < 60) return "medium";
+        return "high";
+      }
+
+      // Lấy danh sách triệu chứng đang có (dùng cho cả SVM và demo)
+      function getActiveSymptoms(formData) {
+        const symptomNames = {
+          chest_pain: "Đau ngực",
+          shortness_of_breath: "Khó thở",
+          irregular_heartbeat: "Rối loạn nhịp tim",
+          fatigue_weakness: "Mệt mỏi, suy nhược",
+          dizziness: "Chóng mặt",
+          swelling: "Sưng, phù",
+          pain_in_neck: "Đau vùng cổ/hàm/vai/lưng",
+          excessive_sweating: "Đổ mồ hôi nhiều bất thường",
+          persistent_cough: "Ho kéo dài",
+          nausea: "Buồn nôn/Nôn",
+          high_blood_pressure: "Tăng huyết áp",
+          chest_discomfort: "Khó chịu ở ngực khi gắng sức",
+          cold_hand: "Tay chân lạnh",
+          snoring: "Ngáy/Ngưng thở khi ngủ",
+          anxiety: "Lo âu/Cảm giác sợ hãi",
+        };
+
+        return Object.keys(formData)
+          .filter((key) => formData[key] === 1 && symptomNames[key])
+          .map((key) => symptomNames[key]);
+      }
+
+      // Hiển thị kết quả dự đoán (đã được cập nhật để nhận riskData từ SVM)
+      function displayResult(riskData) {
+        const resultContainer = document.getElementById("resultContainer");
+        const resultBox = document.getElementById("resultBox");
+        const progressCircle = document.getElementById("progressCircle");
+        const riskPercentageSpan = document.getElementById("riskPercentage");
+        const riskLevel = document.getElementById("riskLevel");
+        const riskDescription = document.getElementById("riskDescription");
+
+        // Hiển thị phần trăm
+        riskPercentageSpan.textContent = riskData.percentage + "%";
+
+        // Thiết lập màu sắc và mô tả theo mức độ nguy cơ
+        let levelText, description, circleColor, boxClass;
+
+        switch (riskData.level) {
+          case "low":
+            levelText = "Nguy cơ thấp";
+            description = `Kết quả dự đoán cho thấy nguy cơ đột quỵ của bạn hiện đang ở mức thấp (${riskData.percentage}%). Tuy nhiên, đừng quên rằng việc duy trì một lối sống lành mạnh luôn là chìa khóa để bảo vệ sức khỏe lâu dài.`;
+            circleColor = "#28a745"; // Màu xanh lá cây
+            boxClass = "risk-low";
+            break;
+          case "medium":
+            levelText = "Nguy cơ trung bình";
+            description = `Kết quả dự đoán cho thấy bạn đang có nguy cơ đột quỵ ở mức trung bình (${riskData.percentage}%). Hãy chú ý theo dõi sức khỏe thường xuyên và cân nhắc tham khảo ý kiến bác sĩ để được tư vấn cụ thể và kịp thời.`;
+            circleColor = "#ffc107"; // Màu vàng
+            boxClass = "risk-medium";
+            break;
+          case "high":
+            levelText = "Nguy cơ cao";
+            description = `Kết quả dự đoán cho thấy bạn đang có nguy cơ đột quỵ cao (${riskData.percentage}%). Bạn nên nhanh chóng đến cơ sở y tế hoặc gặp bác sĩ chuyên khoa để được thăm khám và tư vấn hướng điều trị phù hợp.`;
+            circleColor = "#dc3545"; // Màu đỏ
+            boxClass = "risk-high";
+            break;
+        }
+
+        // Áp dụng style
+        progressCircle.style.backgroundColor = circleColor;
+        riskLevel.textContent = levelText;
+        riskDescription.textContent = description;
+        resultBox.className = `result-box ${boxClass}`; // Áp dụng class cho khung kết quả
+
+        // Hiển thị container kết quả và kích hoạt hiệu ứng
+        resultContainer.classList.remove("hidden");
+        // Kích hoạt hiệu ứng slide-up và fade-in
+        void resultContainer.offsetWidth; // Trigger reflow for CSS transition
+        resultContainer.classList.add("show");
+      }
+
+      // Gọi Gemini API để lấy lời khuyên dựa trên kết quả SVM
+      async function getGeminiAdvice(riskData) {
+        const aiAdviceDiv = document.getElementById("aiAdvice");
+        aiAdviceDiv.innerHTML = `
+          <div class="text-center text-muted">
+            Đang tạo lời khuyên...
+            <div class="spinner-border spinner-border-sm text-primary" role="status">
+              <span class="visually-hidden">Đang tải...</span>
+            </div>
+          </div>
+        `; // Hiển thị trạng thái tải
+
+        // Tạo prompt chi tiết cho Gemini
+        const prompt = `
+        Bạn là một chuyên gia y tế AI, luôn đưa ra lời khuyên thân thiện, chuyên nghiệp, và dễ hiểu.
+        Hãy đưa ra lời khuyên chi tiết cho bệnh nhân dựa trên thông tin sau:
+
+        - Nguy cơ đột quỵ: ${riskData.percentage}% (Mức độ: ${
+          riskData.level === "low"
+            ? "Thấp"
+            : riskData.level === "medium"
+            ? "Trung bình"
+            : "Cao"
+        })
+        - Tuổi: ${riskData.age} tuổi
+        - Các triệu chứng hiện tại: ${
+          riskData.symptoms.length > 0
+            ? riskData.symptoms.join(", ")
+            : "Không có triệu chứng đặc biệt"
+        }
+
+        Hãy đưa ra lời khuyên theo các phần sau (sử dụng <strong></strong> cho tiêu đề phần, không dùng gạch đầu dòng hay ký tự đặc biệt khác):
+        <strong>Đánh giá tình trạng hiện tại:</strong> Tóm tắt ngắn gọn mức độ nguy cơ.
+        <strong>Biện pháp phòng ngừa:</strong> Các hành động cụ thể có thể thực hiện ngay.
+        <strong>Thay đổi lối sống:</strong> Đề xuất về chế độ ăn uống, vận động, nghỉ ngơi.
+        <strong>Khi nào cần đi khám bác sĩ:</strong> Các dấu hiệu cảnh báo cần chú ý.
+        <strong>Lời khuyên thêm:</strong> (Ví dụ: kiểm soát stress, bỏ thuốc lá nếu có, v.v.)
+
+        Lưu ý: Trình bày rõ ràng, dễ đọc. Mỗi tiêu đề phần phải đứng riêng một dòng và không có khoảng trắng thừa. Nội dung chi tiết của mỗi phần nên nằm ngay sau tiêu đề, không có dòng trống ở giữa. Không dùng bất kỳ ký hiệu đánh dấu in đậm nào khác như ** hoặc __. Chỉ dùng văn bản thường và các thẻ <strong> đã được chỉ định. Độ dài khoảng 250-400 từ. Chỉnh khoảng cách giữa các dòng, đoạn cho giống nhau.
+        `;
+
+        if (!currentApiKey) {
+          // Demo response khi không có API key
+          const demoAdvice = getDemoAdvice(riskData);
+          aiAdviceDiv.innerHTML = `<div class="alert alert-info border-info">
+          <strong><i class="bi bi-robot"></i> Lời khuyên từ AI (Demo):</strong><br>
+          ${demoAdvice
+            .replace(/\n\s*\n/g, "\n") // Xóa các dòng trống thừa
+            .replace(/\n/g, "<br>")}
+        </div>`;
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${currentApiKey}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                contents: [
+                  {
+                    parts: [
+                      {
+                        text: prompt,
+                      },
+                    ],
+                  },
+                ],
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(
+              `Lỗi HTTP! Trạng thái: ${response.status}. Có thể API Key không hợp lệ hoặc đã hết hạn.`
+            );
+          }
+
+          const data = await response.json();
+
+          if (
+            data.candidates &&
+            data.candidates[0] &&
+            data.candidates[0].content
+          ) {
+            const advice = data.candidates[0].content.parts[0].text;
+            // Thay thế các tiêu đề bằng thẻ strong và xuống dòng
+            const formattedAdvice = advice
+              .replace(/(\n|^)(🟢|💡|🥗|🏥|🏃‍♂️)\s*/g, "\n<strong>") // Bỏ icon, thay bằng strong
+              .replace(/(\s*:\s*)/g, ":</strong>") // Định dạng tiêu đề
+              .replace(/\n\s*\n/g, "\n") // Xóa các dòng trống thừa
+              .replace(/\n/g, "<br>"); // Chuyển đổi xuống dòng thành <br>
+
+            aiAdviceDiv.innerHTML = `
+              <div class="alert alert-info border-info">
+                ${formattedAdvice}
+              </div>`;
+          } else {
+            throw new Error("Không nhận được phản hồi hợp lệ từ API Gemini.");
+          }
+        } catch (error) {
+          console.error("Lỗi Gemini API:", error);
+          aiAdviceDiv.innerHTML = `
+          <div class="alert alert-warning border-warning">
+            <strong><i class="bi bi-exclamation-triangle"></i> Không thể kết nối Gemini AI</strong><br>
+            <i>${
+              error.message || "Vui lòng kiểm tra kết nối mạng hoặc API Key."
+            }</i><br><br>
+            ${getDemoAdvice(riskData)
+              .replace(/\n\s*\n/g, "\n")
+              .replace(/\n/g, "<br>")}
+          </div>`;
+        }
+      }
+
+      // Lời khuyên demo khi không có API (đã định dạng lại để phù hợp với HTML strong và loại bỏ khoảng trắng thừa)
+      function getDemoAdvice(riskData) {
+        let advice = "";
+
+        switch (riskData.level) {
+          case "low":
+            advice = `
+            <strong>Đánh giá tình trạng hiện tại:</strong>Nguy cơ đột quỵ của bạn ở mức thấp. Đây là một tin tốt, nhưng không có nghĩa là không cần phòng ngừa.
+            <strong>Biện pháp phòng ngừa:</strong>
+            •   Tiếp tục duy trì chế độ ăn uống cân bằng, ít muối, ít đường, tăng cường rau xanh, trái cây và ngũ cốc nguyên hạt.
+            •   Uống đủ nước mỗi ngày (khoảng 2-2.5 lít).
+            <strong>Thay đổi lối sống:</strong>
+            •   Tập thể dục đều đặn ít nhất 30 phút mỗi ngày, 5 ngày mỗi tuần (ví dụ: đi bộ nhanh, bơi lội).
+            •   Đảm bảo ngủ đủ 7-8 tiếng mỗi đêm và quản lý căng thẳng thông qua các hoạt động thư giãn như yoga, thiền.
+            •   Không hút thuốc lá và hạn chế rượu bia.
+            <strong>Khi nào cần đi khám bác sĩ:</strong>
+            •   Khám sức khỏe định kỳ 6-12 tháng/lần để theo dõi các chỉ số quan trọng như huyết áp, đường huyết, cholesterol.
+            •   Nếu bạn nhận thấy bất kỳ triệu chứng mới hoặc triệu chứng hiện tại trở nên nghiêm trọng hơn, hãy tham khảo ý kiến bác sĩ.
+            <strong>Lời khuyên thêm:</strong>Duy trì một lối sống năng động và tinh thần lạc quan sẽ giúp bạn có một sức khỏe tốt về lâu dài.
+          `;
+            break;
+
+          case "medium":
+            advice = `
+            <strong>Đánh giá tình trạng hiện tại:</strong>Bạn có nguy cơ đột quỵ ở mức trung bình. Điều này có nghĩa là bạn cần đặc biệt chú ý đến sức khỏe và thực hiện các biện pháp phòng ngừa nghiêm túc hơn.
+            <strong>Biện pháp phòng ngừa:</strong>
+            •   Kiểm soát huyết áp: Đo huyết áp thường xuyên và đảm bảo huyết áp luôn ở mức khỏe mạnh (dưới 130/80 mmHg).
+            •   Quản lý đường huyết và cholesterol: Nếu bạn có tiền sử tiểu đường hoặc mỡ máu cao, hãy tuân thủ điều trị của bác sĩ và kiểm tra định kỳ.
+            •   Uống thuốc đều đặn: Nếu bác sĩ đã kê đơn thuốc (ví dụ: thuốc hạ huyết áp, thuốc mỡ máu), hãy uống đúng giờ và đủ liều.
+            <strong>Thay đổi lối sống:</strong>
+            •   Chế độ ăn: Tập trung vào chế độ ăn DASH (Dietary Approaches to Stop Hypertension) - ít muối, nhiều kali, magie, canxi, rau xanh, trái cây và các sản phẩm từ sữa ít béo. Hạn chế tối đa thực phẩm chế biến sẵn, đồ ăn nhanh.
+            •   Vận động: Tăng cường các bài tập cardio cường độ vừa phải (ví dụ: đi bộ nhanh, đạp xe) ít nhất 30-45 phút, 5 ngày mỗi tuần. Tham khảo ý kiến bác sĩ trước khi bắt đầu chế độ tập luyện mới.
+            •   Giảm cân: Nếu bạn thừa cân hoặc béo phì, việc giảm cân có ý nghĩa quan trọng trong việc giảm nguy cơ.
+            <strong>Khi nào cần gặp bác sĩ:</strong>
+            •   Nên thăm khám tim mạch hoặc nội tiết trong vòng 1-2 tháng tới để được tư vấn chi tiết về tình trạng của bạn và xây dựng kế hoạch điều trị phù hợp.
+            •   Báo ngay cho bác sĩ nếu xuất hiện các triệu chứng như đau ngực, khó thở, chóng mặt dữ dội, yếu liệt nửa người hoặc nói khó.
+            <strong>Lời khuyên thêm:</strong>Hãy lắng nghe cơ thể và không ngần ngại tìm kiếm sự hỗ trợ y tế khi cần.
+          `;
+            break;
+
+          case "high":
+            advice = `
+            <strong>Đánh giá tình trạng hiện tại:</strong>Nguy cơ đột quỵ của bạn đang ở mức cao. Tình trạng này đòi hỏi phải có hành động y tế và thay đổi lối sống khẩn cấp.
+            <strong>Ưu tiên hàng đầu:</strong>
+            •   ĐẾN GẶP BÁC SĨ CHUYÊN KHOA TIM MẠCH HOẶC THẦN KINH NGAY LẬP TỨC để được thăm khám, chẩn đoán chính xác và lập phác đồ điều trị kịp thời.
+            •   Kiểm tra huyết áp hàng ngày tại nhà và ghi lại kết quả để báo cáo cho bác sĩ.
+            •   Tuân thủ nghiêm ngặt mọi chỉ định của bác sĩ về thuốc men và các liệu pháp điều trị.
+            •   Tránh mọi hoạt động gắng sức quá mức có thể làm tăng nguy cơ.
+            <strong>Thay đổi khẩn cấp trong lối sống:</strong>
+            •   Chế độ ăn: Áp dụng nghiêm ngặt chế độ ăn DASH hoặc các chế độ ăn tương tự được bác sĩ khuyến nghị. Hạn chế tối đa muối, đường, chất béo bão hòa và cholesterol.
+            •   Bỏ thuốc lá hoàn toàn: Nếu bạn đang hút thuốc, việc bỏ thuốc lá ngay lập tức là ưu tiên hàng hàng đầu để giảm nguy cơ đột quỵ.
+            •   Vận động: Chỉ thực hiện các bài tập nhẹ nhàng dưới sự giám sát của chuyên gia y tế hoặc theo chỉ dẫn của bác sĩ.
+            •   Quản lý stress: Tìm kiếm các phương pháp hiệu quả để giảm căng thẳng như thiền, thở sâu, hoặc tư vấn tâm lý nếu cần. Đảm bảo nghỉ ngơi đầy đủ.
+            <strong>Cấp cứu khi:</strong>
+            •   Bạn hoặc người xung quanh có các dấu hiệu đột quỵ cấp tính như: Đột ngột yếu hoặc tê bì mặt, tay hoặc chân (thường ở một bên cơ thể), khó nói hoặc khó hiểu lời nói, đột nhiên rối loạn thị giác một hoặc hai mắt, đau đầu dữ dội không rõ nguyên nhân, khó đi lại, chóng mặt hoặc mất thăng bằng, mất phối hợp.
+            •   Gọi ngay số cấp cứu 115 hoặc đưa bệnh nhân đến bệnh viện gần nhất ngay lập tức! Thời gian là yếu tố then chốt trong điều trị đột quỵ.
+          `;
+            break;
+        }
+
+        return advice;
+      }
+
+      // Chat với Gemini AI
+      async function sendChat() {
+        const input = document.getElementById("chatInput");
+        const chatBox = document.getElementById("chatMessages");
+        const msg = input.value.trim();
+        if (!msg) return;
+
+        // Hiển thị tin nhắn người dùng
+        chatBox.innerHTML += `<div class='text-end text-dark mb-2'><strong>🙋‍♂️ Bạn:</strong> ${msg}</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+        input.value = ""; // Xóa nội dung input
+
+        // Tạo context từ kết quả chẩn đoán trước đó (nếu có)
+        const context = currentRiskData
+          ? `Bệnh nhân có nguy cơ đột quỵ ${
+              currentRiskData.percentage
+            }% (mức độ: ${currentRiskData.level}), tuổi ${
+              currentRiskData.age
+            }, triệu chứng: ${
+              currentRiskData.symptoms.join(", ") || "không có"
+            }. `
+          : "";
+
+        const fullPrompt = `${context}Bạn là một AI y tế. Hãy trả lời câu hỏi về sức khỏe sau bằng tiếng Việt, ngắn gọn và dễ hiểu, khoảng 50-100 từ: ${msg}`;
+
+        // Hiển thị trạng thái AI đang gõ
+        const typingIndicator = document.createElement("div");
+        typingIndicator.className =
+          "text-start text-dark mb-2 typing-indicator";
+        typingIndicator.innerHTML =
+          '<strong>🤖 AI:</strong> Đang gõ... <span class="spinner-grow spinner-grow-sm text-secondary" role="status"></span>';
+        chatBox.appendChild(typingIndicator);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        if (!currentApiKey) {
+          // Demo response
+          setTimeout(() => {
+            typingIndicator.remove(); // Xóa trạng thái đang gõ
+            const demoResponse = getDemoChatResponse(msg);
+            chatBox.innerHTML += `<div class='text-start text-dark mb-2'><strong>🤖 AI:</strong> ${demoResponse}</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+          }, 1000); // Giả lập độ trễ
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${currentApiKey}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                contents: [
+                  {
+                    parts: [
+                      {
+                        text: fullPrompt,
+                      },
+                    ],
+                  },
+                ],
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(
+              `Lỗi HTTP! Trạng thái: ${response.status}. Có thể API Key không hợp lệ hoặc đã hết hạn.`
+            );
+          }
+
+          const data = await response.json();
+
+          if (
+            data.candidates &&
+            data.candidates[0] &&
+            data.candidates[0].content
+          ) {
+            const reply = data.candidates[0].content.parts[0].text;
+            typingIndicator.remove(); // Xóa trạng thái đang gõ
+            chatBox.innerHTML += `<div class='text-start text-dark mb-2'><strong>🤖 Gemini AI:</strong> ${reply}</div>`;
+          } else {
+            throw new Error("Không nhận được phản hồi hợp lệ từ API.");
+          }
+        } catch (error) {
+          console.error("Lỗi Chat API:", error);
+          typingIndicator.remove(); // Xóa trạng thái đang gõ
+          chatBox.innerHTML += `<div class='text-danger'><strong>❌ Lỗi:</strong> Không thể kết nối với Gemini AI. <i>${
+            error.message || "Vui lòng kiểm tra kết nối mạng hoặc API Key."
+          }</i><br>${getDemoChatResponse(msg)}</div>`;
+        }
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+
+      // Demo chat response (các câu trả lời mẫu khi không có API)
+      function getDemoChatResponse(question) {
+        const lowerCaseQuestion = question.toLowerCase();
+
+        if (lowerCaseQuestion.includes("huyết áp")) {
+          return "Huyết áp bình thường là dưới 120/80 mmHg. Để duy trì, bạn nên giảm muối trong chế độ ăn, tập thể dục đều đặn và tránh căng thẳng.";
+        } else if (
+          lowerCaseQuestion.includes("tập thể dục") ||
+          lowerCaseQuestion.includes("vận động")
+        ) {
+          return "Nên tập aerobic cường độ vừa phải ít nhất 150 phút mỗi tuần, như đi bộ nhanh, bơi lội hoặc đạp xe. Chia nhỏ thành các buổi tập ngắn trong ngày cũng rất hiệu quả.";
+        } else if (
+          lowerCaseQuestion.includes("ăn uống") ||
+          lowerCaseQuestion.includes("chế độ ăn")
+        ) {
+          return "Chế độ ăn tốt cho tim mạch bao gồm nhiều rau xanh, trái cây, ngũ cốc nguyên hạt, cá béo và các loại hạt. Hạn chế tối đa đồ ăn nhanh, đồ ngọt và thực phẩm chế biến sẵn.";
+        } else if (lowerCaseQuestion.includes("triệu chứng")) {
+          return "Nếu bạn lo lắng về bất kỳ triệu chứng nào, đặc biệt là những triệu chứng mới hoặc nghiêm trọng, hãy đến gặp bác sĩ để được thăm khám và tư vấn cụ thể. Việc tự chẩn đoán có thể không chính xác.";
+        } else if (lowerCaseQuestion.includes("phòng ngừa đột quỵ")) {
+          return "Phòng ngừa đột quỵ bao gồm kiểm soát huyết áp, đường huyết, mỡ máu, duy trì lối sống lành mạnh (ăn uống khoa học, tập thể dục), không hút thuốc và hạn chế rượu bia.";
+        } else if (lowerCaseQuestion.includes("làm gì khi đột quỵ")) {
+          return "Khi nghi ngờ đột quỵ, hãy gọi ngay số cấp cứu 115. Thời gian là yếu tố then chốt để cứu sống và giảm thiểu di chứng. Trong lúc chờ cấp cứu, hãy để người bệnh nằm nghiêng an toàn.";
+        } else if (
+          lowerCaseQuestion.includes("căng thẳng") ||
+          lowerCaseQuestion.includes("stress")
+        ) {
+          return "Quản lý căng thẳng rất quan trọng. Bạn có thể thử các phương pháp như thiền, yoga, tập thở sâu, đọc sách, nghe nhạc hoặc dành thời gian cho sở thích cá nhân để thư giãn.";
+        }
+        return "Cảm ơn câu hỏi của bạn. Để được tư vấn chính xác và chuyên sâu hơn, bạn nên tham khảo ý kiến bác sĩ hoặc chuyên gia y tế.";
+      }
+
+      // Xử lý form submit
+      document
+        .getElementById("diagnosisForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          // Ẩn kết quả cũ và remove hiệu ứng
+          const resultContainer = document.getElementById("resultContainer");
+          resultContainer.classList.remove("show"); // Xóa class "show" để kích hoạt lại hiệu ứng
+          resultContainer.classList.add("hidden");
+
+          // Hiển thị loading spinner
+          document.getElementById("loadingSpinner").style.display = "block";
+          document.getElementById("aiAdvice").innerHTML =
+            "Đang tải lời khuyên..."; // Reset advice text
+          document.getElementById("chatMessages").innerHTML = ""; // Clear chat history
+
+          // Thu thập dữ liệu form
+          const formData = {
+            chest_pain: parseInt(document.getElementById("chest_pain").value),
+            shortness_of_breath: parseInt(
+              document.getElementById("shortness_of_breath").value
+            ),
+            irregular_heartbeat: parseInt(
+              document.getElementById("irregular_heartbeat").value
+            ),
+            fatigue_weakness: parseInt(
+              document.getElementById("fatigue_weakness").value
+            ),
+            dizziness: parseInt(document.getElementById("dizziness").value),
+            swelling: parseInt(document.getElementById("swelling").value),
+            pain_in_neck: parseInt(
+              document.getElementById("pain_in_neck").value
+            ),
+            excessive_sweating: parseInt(
+              document.getElementById("excessive_sweating").value
+            ),
+            persistent_cough: parseInt(
+              document.getElementById("persistent_cough").value
+            ),
+            nausea: parseInt(document.getElementById("nausea").value),
+            high_blood_pressure: parseInt(
+              document.getElementById("high_blood_pressure").value
+            ),
+            chest_discomfort: parseInt(
+              document.getElementById("chest_discomfort").value
+            ),
+            cold_hand: parseInt(document.getElementById("cold_hand").value),
+            snoring: parseInt(document.getElementById("snoring").value),
+            anxiety: parseInt(document.getElementById("anxiety").value),
+            age: parseInt(document.getElementById("age").value),
+          };
+
+          // Kiểm tra tuổi đã nhập chưa và có hợp lệ không
+          if (isNaN(formData.age) || formData.age < 1 || formData.age > 120) {
+            alert("Vui lòng nhập tuổi hợp lệ (từ 1 đến 120)!");
+            document.getElementById("loadingSpinner").style.display = "none";
+            return;
+          }
+
+          try {
+            // Gửi dữ liệu đến API backend SVM
+            const response = await fetch(SVM_API_URL, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(formData), // Gửi trực tiếp formData
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(
+                `Lỗi từ API SVM: ${errorData.error || response.statusText}`
+              );
+            }
+
+            const svmResult = await response.json();
+
+            // Tạo đối tượng riskData từ kết quả SVM và các triệu chứng đã chọn
+            const riskData = {
+              percentage: svmResult.percentage,
+              level: svmResult.level,
+              symptoms: getActiveSymptoms(formData), // Lấy triệu chứng từ formData gốc
+              age: formData.age,
+            };
+
+            currentRiskData = riskData; // Lưu dữ liệu nguy cơ cho phần chat AI
+
+            // Hiển thị kết quả cơ bản
+            displayResult(riskData);
+
+            // Ẩn loading và lấy lời khuyên AI sau khi hiển thị kết quả cơ bản
+            document.getElementById("loadingSpinner").style.display = "none";
+            await getGeminiAdvice(riskData);
+          } catch (error) {
+            console.error("Lỗi khi gọi API SVM:", error);
+            document.getElementById("loadingSpinner").style.display = "none";
+            alert(
+              `Đã xảy ra lỗi khi dự đoán nguy cơ: ${error.message}\nVui lòng đảm bảo backend SVM đang chạy.`
+            );
+            // Fallback về demo nếu API SVM không hoạt động
+            const demoRiskData = {
+              percentage: 50, // Giá trị demo
+              level: "medium", // Giá trị demo
+              symptoms: getActiveSymptoms(formData),
+              age: formData.age,
+            };
+            displayResult(demoRiskData);
+            getGeminiAdvice(demoRiskData); // Dùng demo data cho Gemini
+          }
+        });
+
+      // Chat input enter key
+      document
+        .getElementById("chatInput")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            sendChat();
+          }
+        });
+
+      // Tự động điền API key khi tải trang để tiện demo
+      document.addEventListener("DOMContentLoaded", function () {
+        currentApiKey = "AIzaSyBrr40NhV3owwHHdTn_HfihNpIwnizXxz8"; // Vui lòng thay thế bằng API Key Gemini của bạn
+
+        // Kích hoạt Bootstrap Tooltips
+        const tooltipTriggerList = document.querySelectorAll(
+          '[data-bs-toggle="tooltip"]'
+        );
+        const tooltipList = [...tooltipTriggerList].map(
+          (tooltipTriggerEl) => new bootstrap.Tooltip(tooltipTriggerEl)
+        );
+      });
+    </script>
+  </body>
+</html>
