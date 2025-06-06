@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import pickle
 import numpy as np
+import os
 # import pandas as pd # Không cần thiết nếu bạn không dùng DataFrame ở đây
 
 app = Flask(__name__)
@@ -117,6 +118,5 @@ def predict_stroke_risk():
         return jsonify({"error": f"Lỗi trong quá trình dự đoán: {str(e)}"}), 500
 
 if __name__ == '__main__':
-    # Chạy ứng dụng Flask trên cổng 5000
-    # Trong môi trường production, bạn sẽ dùng Gunicorn hoặc uWSGI
-    app.run(debug=True, port=5000)
+    logger.info("Khởi động server Flask trên cổng 5000")
+    app.run(host='0.0.0.0', port=5000, debug=True)
